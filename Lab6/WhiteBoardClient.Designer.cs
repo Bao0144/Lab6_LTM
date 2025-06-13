@@ -64,6 +64,7 @@
             radioButton5.TabIndex = 8;
             radioButton5.Text = "5";
             radioButton5.UseVisualStyleBackColor = true;
+            radioButton5.CheckedChanged += radioButton5_CheckedChanged;
             // 
             // radioButton4
             // 
@@ -74,6 +75,7 @@
             radioButton4.TabIndex = 7;
             radioButton4.Text = "4";
             radioButton4.UseVisualStyleBackColor = true;
+            radioButton4.CheckedChanged += radioButton4_CheckedChanged;
             // 
             // radioButton3
             // 
@@ -84,6 +86,7 @@
             radioButton3.TabIndex = 6;
             radioButton3.Text = "2";
             radioButton3.UseVisualStyleBackColor = true;
+            radioButton3.CheckedChanged += radioButton3_CheckedChanged;
             // 
             // radioButton2
             // 
@@ -94,6 +97,7 @@
             radioButton2.TabIndex = 5;
             radioButton2.Text = "3";
             radioButton2.UseVisualStyleBackColor = true;
+            radioButton2.CheckedChanged += radioButton2_CheckedChanged;
             // 
             // radioButton1
             // 
@@ -106,13 +110,14 @@
             radioButton1.TabStop = true;
             radioButton1.Text = "1";
             radioButton1.UseVisualStyleBackColor = true;
+            radioButton1.CheckedChanged += radioButton1_CheckedChanged;
             // 
             // button2
             // 
             button2.Font = new Font("Times New Roman", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button2.Location = new Point(122, 382);
             button2.Name = "button2";
-            button2.Size = new Size(93, 50);
+            button2.Size = new Size(102, 50);
             button2.TabIndex = 6;
             button2.Text = "COLOR";
             button2.UseVisualStyleBackColor = true;

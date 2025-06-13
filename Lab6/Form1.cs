@@ -5,7 +5,7 @@ namespace Lab6
 {
     public partial class Form1 : Form
     {
-        private string defaultIP = "192.168.231.50";  // IP LAN mặc định
+        private string defaultIP = "192.168.231.112";  // IP LAN mặc định
         private int port = 9000;
 
         public Form1()

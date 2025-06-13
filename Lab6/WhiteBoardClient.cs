@@ -227,7 +227,7 @@ namespace Lab6
 
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioButton2.Checked) penSize = 4;
+            if (radioButton2.Checked) penSize = 10;
         }
 
         private void radioButton3_CheckedChanged(object sender, EventArgs e)
@@ -237,7 +237,7 @@ namespace Lab6
 
         private void radioButton4_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioButton4.Checked) penSize = 8;
+            if (radioButton4.Checked) penSize = 15;
         }
 
         private void radioButton5_CheckedChanged(object sender, EventArgs e)
