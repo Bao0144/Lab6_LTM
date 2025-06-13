@@ -11,7 +11,7 @@
       "RelativeMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|solutionrelative:whiteboardserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|D:\\Lab6_LTM\\Lab6\\whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "AbsoluteMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|d:\\lab6_ltm\\lab6\\whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|solutionrelative:whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
@@ -38,11 +38,11 @@
           "Children": [
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
             },
             {
               "$type": "Document",
@@ -52,7 +52,7 @@
               "RelativeDocumentMoniker": "WhiteBoardClient.cs",
               "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardClient.cs",
               "RelativeToolTip": "WhiteBoardClient.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAIYBAAAAAAAAAAAIwJABAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-12T18:57:53.75Z",
               "EditorCaption": ""
@@ -65,7 +65,7 @@
               "RelativeDocumentMoniker": "WhiteBoardServer.cs",
               "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardServer.cs",
               "RelativeToolTip": "WhiteBoardServer.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAAwNwAAAAuAAAAAAAAAA==",
+              "ViewState": "AgIAABACAAAAAAAAAAAwwCoCAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-12T18:56:21.626Z",
               "EditorCaption": ""
@@ -91,7 +91,8 @@
               "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardServer.cs [Design]",
               "RelativeToolTip": "WhiteBoardServer.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-12T18:52:20.459Z"
+              "WhenOpened": "2025-06-12T18:52:20.459Z",
+              "EditorCaption": " [Design]"
             },
             {
               "$type": "Document",
@@ -101,7 +102,7 @@
               "RelativeDocumentMoniker": "Form1.cs",
               "ToolTip": "D:\\Lab6_LTM\\Lab6\\Form1.cs",
               "RelativeToolTip": "Form1.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAzAAAAAAAAAA==",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAgwBcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-12T18:47:10.494Z",
               "EditorCaption": ""

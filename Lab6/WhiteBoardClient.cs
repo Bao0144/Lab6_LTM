@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
+using System.Text;
 
 namespace Lab6
 {
@@ -24,6 +25,11 @@ namespace Lab6
         private readonly object canvasLock = new object();
         private DateTime lastSendTime = DateTime.MinValue;
         private readonly TimeSpan sendInterval = TimeSpan.FromMilliseconds(15); // mỗi 15ms
+
+        // Để theo dõi việc nhận lịch sử
+        private bool isReceivingHistory = false;
+        private int expectedHistoryCount = 0;
+        private int receivedHistoryCount = 0;
 
         public WhiteBoardClient(string serverIP, int port)
         {
@@ -78,6 +84,7 @@ namespace Lab6
                 DateTime now = DateTime.Now;
                 if ((now - lastSendTime) >= sendInterval)
                 {
+                    // Vẽ trên canvas local trước
                     lock (canvasLock)
                     {
                         using (Pen pen = new Pen(currentColor, penSize))
@@ -91,7 +98,8 @@ namespace Lab6
 
                     panel1.Invalidate();
 
-                    string message = $"{lastPoint.X},{lastPoint.Y},{e.Location.X},{e.Location.Y},{currentColor.R},{currentColor.G},{currentColor.B},{penSize}";
+                    // Gửi lên server với prefix DRAW:
+                    string message = $"DRAW:{lastPoint.X},{lastPoint.Y},{e.Location.X},{e.Location.Y},{currentColor.R},{currentColor.G},{currentColor.B},{penSize}";
                     SendMessage(message);
 
                     lastPoint = e.Location;
@@ -99,7 +107,6 @@ namespace Lab6
                 }
             }
         }
-
 
         private void panel1_MouseUp(object? sender, MouseEventArgs e)
         {
@@ -118,8 +125,29 @@ namespace Lab6
             {
                 while (isListening && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    string message = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    panel1.Invoke(new Action(() => ProcessMessage(message)));
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
+                    // Xử lý các message có thể được ghép lại
+                    string[] messages = message.Split(new string[] { "DRAW:", "HISTORY:", "HISTORY_COUNT:", "HISTORY_END" },
+                        StringSplitOptions.RemoveEmptyEntries);
+
+                    // Tìm và xử lý từng loại message
+                    if (message.Contains("HISTORY_COUNT:"))
+                    {
+                        ProcessHistoryCount(message);
+                    }
+                    else if (message.Contains("HISTORY:"))
+                    {
+                        ProcessHistoryMessage(message);
+                    }
+                    else if (message.Contains("HISTORY_END"))
+                    {
+                        ProcessHistoryEnd();
+                    }
+                    else if (message.Contains("DRAW:"))
+                    {
+                        ProcessDrawMessage(message);
+                    }
                 }
             }
             catch (Exception ex)
@@ -132,11 +160,123 @@ namespace Lab6
             }
         }
 
-        private void ProcessMessage(string message)
+        private void ProcessHistoryCount(string message)
         {
             try
             {
-                string[] parts = message.Split(',');
+                // Tìm vị trí của "HISTORY_COUNT:"
+                int startIndex = message.IndexOf("HISTORY_COUNT:") + "HISTORY_COUNT:".Length;
+                string countStr = message.Substring(startIndex);
+
+                // Lấy chỉ số phần đầu (trước ký tự không phải số)
+                string numberPart = "";
+                foreach (char c in countStr)
+                {
+                    if (char.IsDigit(c))
+                        numberPart += c;
+                    else
+                        break;
+                }
+
+                if (int.TryParse(numberPart, out int count))
+                {
+                    expectedHistoryCount = count;
+                    receivedHistoryCount = 0;
+                    isReceivingHistory = true;
+                    Console.WriteLine($"Sẽ nhận {expectedHistoryCount} nét vẽ từ lịch sử");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ProcessHistoryCount error: " + ex.Message);
+            }
+        }
+
+        private void ProcessHistoryMessage(string message)
+        {
+            try
+            {
+                // Tìm vị trí của "HISTORY:"
+                int startIndex = message.IndexOf("HISTORY:") + "HISTORY:".Length;
+                string historyData = message.Substring(startIndex);
+
+                // Tìm phần data trước ký tự không phải là số hoặc dấu phay
+                string drawData = "";
+                foreach (char c in historyData)
+                {
+                    if (char.IsDigit(c) || c == ',' || c == '-')
+                        drawData += c;
+                    else
+                        break;
+                }
+
+                string[] parts = drawData.Split(',');
+                if (parts.Length == 8)
+                {
+                    int x1 = int.Parse(parts[0]);
+                    int y1 = int.Parse(parts[1]);
+                    int x2 = int.Parse(parts[2]);
+                    int y2 = int.Parse(parts[3]);
+                    int r = int.Parse(parts[4]);
+                    int gVal = int.Parse(parts[5]);
+                    int b = int.Parse(parts[6]);
+                    int size = int.Parse(parts[7]);
+
+                    Color color = Color.FromArgb(r, gVal, b);
+
+                    // Vẽ lên canvas
+                    lock (canvasLock)
+                    {
+                        using (Pen pen = new Pen(color, size))
+                        {
+                            pen.StartCap = System.Drawing.Drawing2D.LineCap.Round;
+                            pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
+                            pen.LineJoin = System.Drawing.Drawing2D.LineJoin.Round;
+                            g.DrawLine(pen, new Point(x1, y1), new Point(x2, y2));
+                        }
+                    }
+
+                    receivedHistoryCount++;
+                    Console.WriteLine($"Đã nhận nét vẽ lịch sử {receivedHistoryCount}/{expectedHistoryCount}");
+
+                    // Cập nhật UI
+                    this.Invoke(new Action(() => panel1.Invalidate()));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ProcessHistoryMessage error: " + ex.Message);
+            }
+        }
+
+        private void ProcessHistoryEnd()
+        {
+            isReceivingHistory = false;
+            Console.WriteLine($"Hoàn thành nhận lịch sử: {receivedHistoryCount}/{expectedHistoryCount} nét vẽ");
+
+            // Cập nhật UI cuối cùng
+            this.Invoke(new Action(() => panel1.Invalidate()));
+        }
+
+        private void ProcessDrawMessage(string message)
+        {
+            try
+            {
+                // Tìm vị trí của "DRAW:"
+                int startIndex = message.IndexOf("DRAW:") + "DRAW:".Length;
+                string drawData = message.Substring(startIndex);
+
+                // Tìm phần data trước ký tự không phải là số hoặc dấu phay
+                string validDrawData = "";
+                foreach (char c in drawData)
+                {
+                    if (char.IsDigit(c) || c == ',' || c == '-')
+                        validDrawData += c;
+                    else
+                        break;
+                }
+
+                string[] parts = validDrawData.Split(',');
                 if (parts.Length == 8)
                 {
                     int x1 = int.Parse(parts[0]);
@@ -161,12 +301,12 @@ namespace Lab6
                         }
                     }
 
-                    panel1.Invalidate();
+                    this.Invoke(new Action(() => panel1.Invalidate()));
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ProcessMessage error: " + ex.Message);
+                Console.WriteLine("ProcessDrawMessage error: " + ex.Message);
             }
         }
 
@@ -174,7 +314,7 @@ namespace Lab6
         {
             try
             {
-                byte[] data = System.Text.Encoding.UTF8.GetBytes(message);
+                byte[] data = Encoding.UTF8.GetBytes(message);
                 stream.Write(data, 0, data.Length);
                 stream.Flush();
             }
@@ -198,6 +338,7 @@ namespace Lab6
             listenThread?.Join(); // chờ thread kết thúc an toàn
             this.Close();
         }
+
         private void SaveBoardImage()
         {
             try
@@ -206,12 +347,15 @@ namespace Lab6
                 {
                     saveFileDialog.Filter = "PNG Image|*.png";
                     saveFileDialog.Title = "Chọn nơi lưu hình whiteboard";
-                    saveFileDialog.FileName = $"Whiteboard_Server_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+                    saveFileDialog.FileName = $"Whiteboard_Client_{DateTime.Now:yyyyMMdd_HHmmss}.png";
 
                     if (saveFileDialog.ShowDialog() == DialogResult.OK)
                     {
-                        canvas.Save(saveFileDialog.FileName, ImageFormat.Png);
-                        MessageBox.Show($"Đã lưu hình whiteboard server: {saveFileDialog.FileName}");
+                        lock (canvasLock)
+                        {
+                            canvas.Save(saveFileDialog.FileName, ImageFormat.Png);
+                        }
+                        MessageBox.Show($"Đã lưu hình whiteboard client: {saveFileDialog.FileName}");
                     }
                 }
             }
@@ -220,6 +364,7 @@ namespace Lab6
                 MessageBox.Show("Lỗi lưu hình: " + ex.Message);
             }
         }
+
         private void button2_Click(object sender, EventArgs e)
         {
             ColorDialog colorDlg = new ColorDialog();
@@ -250,7 +395,7 @@ namespace Lab6
         }
 
         private void radioButton5_CheckedChanged(object sender, EventArgs e)
-        {   
+        {
             if (radioButton5.Checked) penSize = 20;
         }
 

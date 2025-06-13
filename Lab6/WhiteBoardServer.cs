@@ -7,10 +7,12 @@ using System.Net.Mail;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Lab6
 {
+
     public partial class WhiteBoardServer : Form
     {
         private TcpListener listener;
@@ -37,6 +39,18 @@ namespace Lab6
         private readonly string senderEmail = "quocbaoo2005@gmail.com"; // Email gửi
         private readonly string senderPassword = "vqgw pmte nibz wcmh"; // App password hoặc mật khẩu
 
+        public class DrawCommand
+        {
+            public Point StartPoint { get; set; }
+            public Point EndPoint { get; set; }
+            public Color Color { get; set; }
+            public int PenSize { get; set; }
+            public DateTime Timestamp { get; set; }
+        }
+
+        private List<DrawCommand> drawHistory = new List<DrawCommand>();
+        private readonly object historyLock = new object();
+
         public WhiteBoardServer(int port)
         {
             InitializeComponent();
@@ -50,7 +64,7 @@ namespace Lab6
             this.port = port;
             listener = new TcpListener(IPAddress.Any, port);
             clients = new List<TcpClient>();
-       
+
             canvas = new Bitmap(800, 600);
             g = Graphics.FromImage(canvas);
             g.Clear(Color.White);
@@ -169,6 +183,20 @@ namespace Lab6
 
         private void DrawAndBroadcast(Point p1, Point p2, Color color, int size)
         {
+            // Lưu vào lịch sử
+            lock (historyLock)
+            {
+                drawHistory.Add(new DrawCommand
+                {
+                    StartPoint = p1,
+                    EndPoint = p2,
+                    Color = color,
+                    PenSize = size,
+                    Timestamp = DateTime.Now
+                });
+            }
+
+            // Vẽ trên canvas
             lock (canvasLock)
             {
                 using (Pen pen = new Pen(color, size))
@@ -182,7 +210,7 @@ namespace Lab6
 
             panel1.Invalidate();
 
-            string message = $"{p1.X},{p1.Y},{p2.X},{p2.Y},{color.R},{color.G},{color.B},{size}";
+            string message = $"DRAW:{p1.X},{p1.Y},{p2.X},{p2.Y},{color.R},{color.G},{color.B},{size}";
             byte[] data = Encoding.UTF8.GetBytes(message);
             Broadcast(data, data.Length);
         }
@@ -219,6 +247,10 @@ namespace Lab6
 
                         TcpClient client = listener.AcceptTcpClient();
                         client.NoDelay = true;
+
+                        // Gửi lịch sử các nét vẽ cho client mới
+                        SendDrawHistoryToClient(client);
+
                         lock (clients)
                         {
                             clients.Add(client);
@@ -261,8 +293,13 @@ namespace Lab6
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                    ProcessMessage(message);
-                    Broadcast(buffer, bytesRead); // Gửi tới client khác
+                    // Chỉ xử lý message từ client nếu là DRAW command
+                    if (message.StartsWith("DRAW:"))
+                    {
+                        ProcessDrawMessage(message);
+                        // Broadcast tới các client khác (không gửi lại cho client gửi)
+                        BroadcastToOthers(buffer, bytesRead, client);
+                    }
                 }
             }
             catch
@@ -286,11 +323,14 @@ namespace Lab6
             }
         }
 
-        private void ProcessMessage(string message)
+        private void ProcessDrawMessage(string message)
         {
             try
             {
-                string[] parts = message.Split(',');
+                // Bỏ prefix "DRAW:"
+                string drawData = message.Substring(5);
+                string[] parts = drawData.Split(',');
+
                 if (parts.Length == 8)
                 {
                     int x1 = int.Parse(parts[0]);
@@ -303,7 +343,23 @@ namespace Lab6
                     int size = int.Parse(parts[7]);
 
                     Color color = Color.FromArgb(r, gVal, b);
+                    Point p1 = new Point(x1, y1);
+                    Point p2 = new Point(x2, y2);
 
+                    // Lưu vào lịch sử
+                    lock (historyLock)
+                    {
+                        drawHistory.Add(new DrawCommand
+                        {
+                            StartPoint = p1,
+                            EndPoint = p2,
+                            Color = color,
+                            PenSize = size,
+                            Timestamp = DateTime.Now
+                        });
+                    }
+
+                    // Vẽ lên canvas
                     lock (canvasLock)
                     {
                         using (Pen pen = new Pen(color, size))
@@ -311,7 +367,7 @@ namespace Lab6
                             pen.StartCap = System.Drawing.Drawing2D.LineCap.Round;
                             pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
                             pen.LineJoin = System.Drawing.Drawing2D.LineJoin.Round;
-                            g.DrawLine(pen, new Point(x1, y1), new Point(x2, y2));
+                            g.DrawLine(pen, p1, p2);
                         }
                     }
 
@@ -320,7 +376,50 @@ namespace Lab6
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ProcessMessage error: " + ex.Message);
+                Console.WriteLine("ProcessDrawMessage error: " + ex.Message);
+            }
+        }
+
+        private void SendDrawHistoryToClient(TcpClient client)
+        {
+            try
+            {
+                lock (historyLock)
+                {
+                    Console.WriteLine($"Gửi {drawHistory.Count} nét vẽ cho client mới");
+
+                    NetworkStream stream = client.GetStream();
+
+                    // Gửi số lượng commands trước
+                    string countMessage = $"HISTORY_COUNT:{drawHistory.Count}";
+                    byte[] countData = Encoding.UTF8.GetBytes(countMessage);
+                    stream.Write(countData, 0, countData.Length);
+                    stream.Flush();
+                    Thread.Sleep(10); // Đợi client xử lý
+
+                    // Gửi từng command
+                    foreach (var cmd in drawHistory)
+                    {
+                        string message = $"HISTORY:{cmd.StartPoint.X},{cmd.StartPoint.Y},{cmd.EndPoint.X},{cmd.EndPoint.Y},{cmd.Color.R},{cmd.Color.G},{cmd.Color.B},{cmd.PenSize}";
+                        byte[] data = Encoding.UTF8.GetBytes(message);
+
+                        stream.Write(data, 0, data.Length);
+                        stream.Flush();
+
+                        // Delay nhỏ để tránh overwhelm client
+                        Thread.Sleep(5);
+                    }
+
+                    // Gửi signal kết thúc
+                    string endMessage = "HISTORY_END";
+                    byte[] endData = Encoding.UTF8.GetBytes(endMessage);
+                    stream.Write(endData, 0, endData.Length);
+                    stream.Flush();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SendDrawHistoryToClient error: {ex.Message}");
             }
         }
 
@@ -339,6 +438,29 @@ namespace Lab6
                     catch
                     {
                         // Bỏ qua nếu lỗi gửi
+                    }
+                }
+            }
+        }
+
+        private void BroadcastToOthers(byte[] data, int length, TcpClient sender)
+        {
+            lock (clients)
+            {
+                foreach (var client in clients)
+                {
+                    if (client != sender) // Không gửi lại cho client gửi
+                    {
+                        try
+                        {
+                            NetworkStream stream = client.GetStream();
+                            stream.Write(data, 0, length);
+                            stream.Flush();
+                        }
+                        catch
+                        {
+                            // Bỏ qua nếu lỗi gửi
+                        }
                     }
                 }
             }
