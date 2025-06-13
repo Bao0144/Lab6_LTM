@@ -22,6 +22,8 @@ namespace Lab6
         private Bitmap canvas;
         private Graphics g;
         private readonly object canvasLock = new object();
+        private DateTime lastSendTime = DateTime.MinValue;
+        private readonly TimeSpan sendInterval = TimeSpan.FromMilliseconds(15); // mỗi 15ms
 
         public WhiteBoardClient(string serverIP, int port)
         {
@@ -34,6 +36,7 @@ namespace Lab6
                 null, panel1, new object[] { true });
 
             client = new TcpClient();
+            client.NoDelay = true;
             client.Connect(serverIP, port);
             stream = client.GetStream();
 
@@ -72,25 +75,31 @@ namespace Lab6
         {
             if (isDrawing)
             {
-                lock (canvasLock)
+                DateTime now = DateTime.Now;
+                if ((now - lastSendTime) >= sendInterval)
                 {
-                    using (Pen pen = new Pen(currentColor, penSize))
+                    lock (canvasLock)
                     {
-                        pen.StartCap = System.Drawing.Drawing2D.LineCap.Round;
-                        pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
-                        pen.LineJoin = System.Drawing.Drawing2D.LineJoin.Round;
-                        g.DrawLine(pen, lastPoint, e.Location);
+                        using (Pen pen = new Pen(currentColor, penSize))
+                        {
+                            pen.StartCap = System.Drawing.Drawing2D.LineCap.Round;
+                            pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
+                            pen.LineJoin = System.Drawing.Drawing2D.LineJoin.Round;
+                            g.DrawLine(pen, lastPoint, e.Location);
+                        }
                     }
+
+                    panel1.Invalidate();
+
+                    string message = $"{lastPoint.X},{lastPoint.Y},{e.Location.X},{e.Location.Y},{currentColor.R},{currentColor.G},{currentColor.B},{penSize}";
+                    SendMessage(message);
+
+                    lastPoint = e.Location;
+                    lastSendTime = now;
                 }
-
-                panel1.Invalidate();
-
-                string message = $"{lastPoint.X},{lastPoint.Y},{e.Location.X},{e.Location.Y},{currentColor.R},{currentColor.G},{currentColor.B},{penSize}";
-                SendMessage(message);
-
-                lastPoint = e.Location;
             }
         }
+
 
         private void panel1_MouseUp(object? sender, MouseEventArgs e)
         {
@@ -241,7 +250,7 @@ namespace Lab6
         }
 
         private void radioButton5_CheckedChanged(object sender, EventArgs e)
-        {
+        {   
             if (radioButton5.Checked) penSize = 20;
         }
 

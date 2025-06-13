@@ -50,7 +50,7 @@ namespace Lab6
             this.port = port;
             listener = new TcpListener(IPAddress.Any, port);
             clients = new List<TcpClient>();
-
+       
             canvas = new Bitmap(800, 600);
             g = Graphics.FromImage(canvas);
             g.Clear(Color.White);
@@ -218,6 +218,7 @@ namespace Lab6
                         }
 
                         TcpClient client = listener.AcceptTcpClient();
+                        client.NoDelay = true;
                         lock (clients)
                         {
                             clients.Add(client);
