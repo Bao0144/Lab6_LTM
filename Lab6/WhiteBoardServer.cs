@@ -29,6 +29,14 @@ namespace Lab6
         public WhiteBoardServer(int port)
         {
             InitializeComponent();
+
+            typeof(Panel).InvokeMember("DoubleBuffered",
+                System.Reflection.BindingFlags.SetProperty |
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic,
+                null, panel1, new object[] { true });
+
+
             this.port = port;
             listener = new TcpListener(IPAddress.Any, port);
             clients = new List<TcpClient>();

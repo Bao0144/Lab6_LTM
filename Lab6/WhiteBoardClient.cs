@@ -27,6 +27,12 @@ namespace Lab6
         {
             InitializeComponent();
 
+            typeof(Panel).InvokeMember("DoubleBuffered",
+                System.Reflection.BindingFlags.SetProperty |
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic,
+                null, panel1, new object[] { true });
+
             client = new TcpClient();
             client.Connect(serverIP, port);
             stream = client.GetStream();
