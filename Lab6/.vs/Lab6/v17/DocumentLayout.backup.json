@@ -3,28 +3,28 @@
   "WorkspaceRootPath": "D:\\Lab6_LTM\\Lab6\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|d:\\lab6_ltm\\lab6\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Lab6_LTM\\Lab6\\Form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|d:\\lab6_ltm\\lab6\\whiteboardserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|solutionrelative:whiteboardserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Lab6_LTM\\Lab6\\WhiteBoardServer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WhiteBoardServer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|D:\\Lab6_LTM\\Lab6\\whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|solutionrelative:whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Lab6_LTM\\Lab6\\WhiteBoardClient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WhiteBoardClient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|d:\\lab6_ltm\\lab6\\whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|solutionrelative:whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Lab6_LTM\\Lab6\\whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:whiteboardclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|d:\\lab6_ltm\\lab6\\whiteboardserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|solutionrelative:whiteboardserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Lab6_LTM\\Lab6\\whiteboardserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:whiteboardserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|D:\\Lab6_LTM\\Lab6\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{919DF9DA-0E18-43AE-9366-246E65A6F0DE}|Lab6.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Lab6_LTM\\Lab6\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     }
   ],
   "DocumentGroupContainers": [
@@ -46,53 +46,51 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "WhiteBoardClient.cs",
               "DocumentMoniker": "D:\\Lab6_LTM\\Lab6\\WhiteBoardClient.cs",
               "RelativeDocumentMoniker": "WhiteBoardClient.cs",
-              "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardClient.cs*",
-              "RelativeToolTip": "WhiteBoardClient.cs*",
-              "ViewState": "AgIAABcAAAAAAAAAAAAAwB4AAAA6AAAAAAAAAA==",
+              "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardClient.cs",
+              "RelativeToolTip": "WhiteBoardClient.cs",
+              "ViewState": "AgIAAOQAAAAAAAAAAAAIwPMAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-12T18:57:53.75Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 1,
               "Title": "WhiteBoardServer.cs",
               "DocumentMoniker": "D:\\Lab6_LTM\\Lab6\\WhiteBoardServer.cs",
               "RelativeDocumentMoniker": "WhiteBoardServer.cs",
               "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardServer.cs",
               "RelativeToolTip": "WhiteBoardServer.cs",
-              "ViewState": "AgIAAEMBAAAAAAAAAIAwwEwBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAJIBAAAAAAAAAAAuwKIBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-12T18:56:21.626Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "WhiteBoardClient.cs [Design]",
               "DocumentMoniker": "D:\\Lab6_LTM\\Lab6\\WhiteBoardClient.cs",
               "RelativeDocumentMoniker": "WhiteBoardClient.cs",
-              "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardClient.cs [Design]*",
-              "RelativeToolTip": "WhiteBoardClient.cs [Design]*",
+              "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardClient.cs [Design]",
+              "RelativeToolTip": "WhiteBoardClient.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-12T18:53:02.044Z",
-              "EditorCaption": " [Design]"
+              "WhenOpened": "2025-06-12T18:53:02.044Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "WhiteBoardServer.cs [Design]",
               "DocumentMoniker": "D:\\Lab6_LTM\\Lab6\\WhiteBoardServer.cs",
               "RelativeDocumentMoniker": "WhiteBoardServer.cs",
               "ToolTip": "D:\\Lab6_LTM\\Lab6\\WhiteBoardServer.cs [Design]",
               "RelativeToolTip": "WhiteBoardServer.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-12T18:52:20.459Z",
-              "EditorCaption": " [Design]"
+              "WhenOpened": "2025-06-12T18:52:20.459Z"
             },
             {
               "$type": "Document",
@@ -102,7 +100,7 @@
               "RelativeDocumentMoniker": "Form1.cs",
               "ToolTip": "D:\\Lab6_LTM\\Lab6\\Form1.cs",
               "RelativeToolTip": "Form1.cs",
-              "ViewState": "AgIAAAcAAAAAAAAAAAAIwAwAAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAuwBAAAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-12T18:47:10.494Z",
               "EditorCaption": ""

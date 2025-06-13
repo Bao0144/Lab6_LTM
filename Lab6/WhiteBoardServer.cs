@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Net;
+using System.Net.Mail;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -26,6 +27,16 @@ namespace Lab6
         private bool isDrawing = false;
         private Point lastPoint;
         private object canvasLock = new object();
+
+        // Email configuration
+        private const int MAX_CLIENTS = 5;
+        private bool emailSent = false; // Để tránh gửi email nhiều lần
+        private readonly string smtpServer = "smtp.gmail.com"; // Thay đổi theo email provider
+        private readonly int smtpPort = 587;
+        private readonly string adminEmail = "23520501@gm.uit.edu.vn"; // Email quản trị viên
+        private readonly string senderEmail = "quocbaoo2005@gmail.com"; // Email gửi
+        private readonly string senderPassword = "vqgw pmte nibz wcmh"; // App password hoặc mật khẩu
+
         public WhiteBoardServer(int port)
         {
             InitializeComponent();
@@ -35,7 +46,6 @@ namespace Lab6
                 System.Reflection.BindingFlags.Instance |
                 System.Reflection.BindingFlags.NonPublic,
                 null, panel1, new object[] { true });
-
 
             this.port = port;
             listener = new TcpListener(IPAddress.Any, port);
@@ -50,6 +60,56 @@ namespace Lab6
             panel1.MouseUp += panel1_MouseUp;
             panel1.Paint += panel1_Paint;
         }
+
+        private async void SendMaxClientsAlert()
+        {
+            if (emailSent) return; // Đã gửi email rồi thì không gửi nữa
+
+            try
+            {
+                using (SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort))
+                {
+                    smtpClient.EnableSsl = true;
+                    smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+
+                    MailMessage mail = new MailMessage();
+                    mail.From = new MailAddress(senderEmail, "WhiteBoard Server");
+                    mail.To.Add(adminEmail);
+                    mail.Subject = "Cảnh báo: Đạt số lượng client tối đa";
+                    mail.Body = $@"
+                        Kính gửi Quản trị viên,
+
+                        Hệ thống WhiteBoard Server đã đạt số lượng client kết nối tối đa.
+
+                        Thông tin chi tiết:
+                        - Thời gian: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+                        - Số lượng client hiện tại: {clients.Count}
+                        - Số lượng client tối đa: {MAX_CLIENTS}
+                        - Port server: {port}
+                        - IP server: {IPAddress.Any}
+
+                        Vui lòng kiểm tra và xử lý khi cần thiết.
+
+                        Trân trọng,
+                        WhiteBoard Server System";
+
+                    mail.IsBodyHtml = false;
+
+                    await smtpClient.SendMailAsync(mail);
+                    emailSent = true;
+
+                    // Log thông báo gửi email thành công
+                    Console.WriteLine($"[{DateTime.Now}] Email cảnh báo đã được gửi tới {adminEmail}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{DateTime.Now}] Lỗi gửi email: {ex.Message}");
+                MessageBox.Show($"Không thể gửi email cảnh báo: {ex.Message}", "Lỗi Email",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
         private void SaveBoardImage()
         {
             try
@@ -72,6 +132,7 @@ namespace Lab6
                 MessageBox.Show("Lỗi lưu hình: " + ex.Message);
             }
         }
+
         private void panel1_Paint(object? sender, PaintEventArgs e)
         {
             lock (canvasLock)
@@ -143,11 +204,30 @@ namespace Lab6
                 {
                     if (listener.Pending())
                     {
+                        // Kiểm tra số lượng client trước khi chấp nhận kết nối mới
+                        lock (clients)
+                        {
+                            if (clients.Count >= MAX_CLIENTS)
+                            {
+                                // Từ chối kết nối nếu đã đạt tối đa
+                                TcpClient rejectedClient = listener.AcceptTcpClient();
+                                rejectedClient.Close();
+                                Console.WriteLine($"[{DateTime.Now}] Từ chối client mới - Đã đạt tối đa {MAX_CLIENTS} clients");
+                                continue;
+                            }
+                        }
+
                         TcpClient client = listener.AcceptTcpClient();
                         lock (clients)
                         {
                             clients.Add(client);
                             UpdateClientCount();
+
+                            // Kiểm tra và gửi email cảnh báo nếu đạt tối đa
+                            if (clients.Count >= MAX_CLIENTS)
+                            {
+                                _ = Task.Run(() => SendMaxClientsAlert());
+                            }
                         }
 
                         Thread clientThread = new Thread(HandleClientComm);
@@ -194,6 +274,12 @@ namespace Lab6
                 {
                     clients.Remove(client);
                     UpdateClientCount();
+
+                    // Reset flag gửi email khi số client giảm xuống dưới tối đa
+                    if (clients.Count < MAX_CLIENTS)
+                    {
+                        emailSent = false;
+                    }
                 }
                 client.Close();
             }
@@ -279,6 +365,7 @@ namespace Lab6
             StopServer();
             Application.Exit();
         }
+
         private void UpdateClientCount()
         {
             if (label1.InvokeRequired)
@@ -287,9 +374,20 @@ namespace Lab6
             }
             else
             {
-                label1.Text = $"Clients: {clients.Count}";
+                // Hiển thị màu cảnh báo khi đạt tối đa
+                if (clients.Count >= MAX_CLIENTS)
+                {
+                    label1.Text = $"Clients: {clients.Count}/{MAX_CLIENTS}";
+                    label1.ForeColor = Color.Red;
+                }
+                else
+                {
+                    label1.Text = $"Clients: {clients.Count}/{MAX_CLIENTS}";
+                    label1.ForeColor = Color.Black;
+                }
             }
         }
+
         private void button2_Click(object sender, EventArgs e)
         {
             ColorDialog colorDlg = new ColorDialog();
