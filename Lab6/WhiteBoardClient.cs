@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
 using System.Text;
+using System.Drawing.Drawing2D;
 
 namespace Lab6
 {
@@ -25,6 +26,18 @@ namespace Lab6
         private readonly object canvasLock = new object();
         private DateTime lastSendTime = DateTime.MinValue;
         private readonly TimeSpan sendInterval = TimeSpan.FromMilliseconds(15); // mỗi 15ms
+
+        private Image? insertedImage = null;
+        private Rectangle insertedImageRect = new Rectangle(100, 100, 200, 150); // Vị trí và kích thước ảnh
+
+        private bool draggingImage = false;
+        private Point imageDragOffset;
+        private enum DragMode { None, Move, ResizeTopLeft, ResizeTopRight, ResizeBottomLeft, ResizeBottomRight }
+        private DragMode dragMode = DragMode.None;
+        private const int handleSize = 10; // kích thước điểm kéo
+
+        private DateTime lastSendImageTime = DateTime.MinValue;
+        private readonly TimeSpan sendImageInterval = TimeSpan.FromMilliseconds(100);
 
         // Để theo dõi việc nhận lịch sử
         private bool isReceivingHistory = false;
@@ -66,10 +79,56 @@ namespace Lab6
             {
                 e.Graphics.DrawImage(canvas, Point.Empty);
             }
+
+            // Vẽ ảnh nếu có
+            if (insertedImage != null)
+            {
+                e.Graphics.DrawImage(insertedImage, insertedImageRect);
+                // (Tùy chọn: Vẽ viền)
+                e.Graphics.DrawRectangle(Pens.Blue, insertedImageRect);
+                int handleSize = 8; // Kích thước ô vuông handle
+                Brush handleBrush = Brushes.White;
+                Pen handlePen = Pens.Black;
+
+                Rectangle tl = new Rectangle(insertedImageRect.Left - handleSize / 2, insertedImageRect.Top - handleSize / 2, handleSize, handleSize);
+                Rectangle tr = new Rectangle(insertedImageRect.Right - handleSize / 2, insertedImageRect.Top - handleSize / 2, handleSize, handleSize);
+                Rectangle bl = new Rectangle(insertedImageRect.Left - handleSize / 2, insertedImageRect.Bottom - handleSize / 2, handleSize, handleSize);
+                Rectangle br = new Rectangle(insertedImageRect.Right - handleSize / 2, insertedImageRect.Bottom - handleSize / 2, handleSize, handleSize);
+
+                // Vẽ 4 góc handle
+                e.Graphics.FillRectangle(handleBrush, tl);
+                e.Graphics.DrawRectangle(handlePen, tl);
+
+                e.Graphics.FillRectangle(handleBrush, tr);
+                e.Graphics.DrawRectangle(handlePen, tr);
+
+                e.Graphics.FillRectangle(handleBrush, bl);
+                e.Graphics.DrawRectangle(handlePen, bl);
+
+                e.Graphics.FillRectangle(handleBrush, br);
+                e.Graphics.DrawRectangle(handlePen, br);
+
+            }
         }
+
 
         private void panel1_MouseDown(object? sender, MouseEventArgs e)
         {
+            if (insertedImage != null)
+            {
+                dragMode = GetResizeHandle(e.Location); // ✅ xác định người dùng click vào đâu
+
+                if (dragMode == DragMode.Move)
+                {
+                    imageDragOffset = new Point(e.X - insertedImageRect.X, e.Y - insertedImageRect.Y);
+                    return;
+                }
+                else if (dragMode != DragMode.None)
+                {
+                    return; // nếu đang resize → không vẽ
+                }
+            }
+
             if (e.Button == MouseButtons.Left)
             {
                 isDrawing = true;
@@ -77,14 +136,72 @@ namespace Lab6
             }
         }
 
+
         private void panel1_MouseMove(object? sender, MouseEventArgs e)
         {
+            if (insertedImage != null && dragMode != DragMode.None)
+            {
+                // Resize hoặc move ảnh
+                switch (dragMode)
+                {
+                    case DragMode.Move:
+                        Cursor = Cursors.SizeAll;
+                        insertedImageRect.X = e.X - imageDragOffset.X;
+                        insertedImageRect.Y = e.Y - imageDragOffset.Y;
+                        break;
+                    case DragMode.ResizeTopLeft:
+                        Cursor = Cursors.SizeNWSE;
+                        insertedImageRect.Width = Math.Max(20, insertedImageRect.Right - e.X);
+                        insertedImageRect.Height = Math.Max(20, insertedImageRect.Bottom - e.Y);
+                        insertedImageRect.X = e.X;
+                        insertedImageRect.Y = e.Y;
+                        break;
+
+                    case DragMode.ResizeTopRight:
+                        Cursor = Cursors.SizeNESW;
+                        insertedImageRect.Width = Math.Max(20, e.X - insertedImageRect.X);
+                        insertedImageRect.Height = Math.Max(20, insertedImageRect.Bottom - e.Y);
+                        insertedImageRect.Y = e.Y;
+                        break;
+
+                    case DragMode.ResizeBottomLeft:
+                        Cursor = Cursors.SizeNESW;
+                        insertedImageRect.Width = Math.Max(20, insertedImageRect.Right - e.X);
+                        insertedImageRect.Height = Math.Max(20, e.Y - insertedImageRect.Y);
+                        insertedImageRect.X = e.X;
+                        break;
+
+                    case DragMode.ResizeBottomRight:
+                        Cursor = Cursors.SizeNWSE;
+                        insertedImageRect.Width = Math.Max(20, e.X - insertedImageRect.X);
+                        insertedImageRect.Height = Math.Max(20, e.Y - insertedImageRect.Y);
+                        break;
+                }
+
+                // Gửi ảnh cập nhật nếu cần
+                DateTime now = DateTime.Now;
+                if ((now - lastSendImageTime) >= sendImageInterval)
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        insertedImage.Save(ms, ImageFormat.Png);
+                        string base64 = Convert.ToBase64String(ms.ToArray());
+                        string msg = $"IMAGE:{insertedImageRect.X},{insertedImageRect.Y},{insertedImageRect.Width},{insertedImageRect.Height},{base64}";
+                        SendMessage(msg);
+                    }
+                    lastSendImageTime = now;
+                }
+
+                panel1.Invalidate();
+                return;
+            }
+
+            // Nếu đang vẽ bằng bút
             if (isDrawing)
             {
                 DateTime now = DateTime.Now;
                 if ((now - lastSendTime) >= sendInterval)
                 {
-                    // Vẽ trên canvas local trước
                     lock (canvasLock)
                     {
                         using (Pen pen = new Pen(currentColor, penSize))
@@ -98,12 +215,34 @@ namespace Lab6
 
                     panel1.Invalidate();
 
-                    // Gửi lên server với prefix DRAW:
-                    string message = $"DRAW:{lastPoint.X},{lastPoint.Y},{e.Location.X},{e.Location.Y},{currentColor.R},{currentColor.G},{currentColor.B},{penSize}";
+                    string message = $"{lastPoint.X},{lastPoint.Y},{e.Location.X},{e.Location.Y},{currentColor.R},{currentColor.G},{currentColor.B},{penSize}";
                     SendMessage(message);
 
                     lastPoint = e.Location;
                     lastSendTime = now;
+                }
+            }
+
+            // Đổi con trỏ chuột nếu hover lên handle
+            if (insertedImage != null)
+            {
+                var mode = GetResizeHandle(e.Location);
+                switch (mode)
+                {
+                    case DragMode.Move:
+                        Cursor = Cursors.SizeAll;
+                        break;
+                    case DragMode.ResizeTopLeft:
+                    case DragMode.ResizeBottomRight:
+                        Cursor = Cursors.SizeNWSE;
+                        break;
+                    case DragMode.ResizeTopRight:
+                    case DragMode.ResizeBottomLeft:
+                        Cursor = Cursors.SizeNESW;
+                        break;
+                    default:
+                        Cursor = Cursors.Default;
+                        break;
                 }
             }
         }
@@ -113,6 +252,38 @@ namespace Lab6
             if (e.Button == MouseButtons.Left)
             {
                 isDrawing = false;
+                dragMode = DragMode.None; // ✅ reset chế độ kéo/resize
+                Cursor = Cursors.Default; // (tùy chọn) đưa con trỏ về lại bình thường
+            }
+        }
+        private void ProcessImageMessage(string message)
+        {
+            try
+            {
+                string data = message.Substring("IMAGE:".Length);
+                string[] parts = data.Split(new[] { ',' }, 5);
+
+                if (parts.Length == 5)
+                {
+                    int x = int.Parse(parts[0]);
+                    int y = int.Parse(parts[1]);
+                    int w = int.Parse(parts[2]);
+                    int h = int.Parse(parts[3]);
+                    string base64 = parts[4];
+
+                    byte[] imgData = Convert.FromBase64String(base64);
+                    using (MemoryStream ms = new MemoryStream(imgData))
+                    {
+                        insertedImage = Image.FromStream(ms);
+                        insertedImageRect = new Rectangle(x, y, w, h);
+                    }
+
+                    this.Invoke(new Action(() => panel1.Invalidate()));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ProcessImageMessage error: " + ex.Message);
             }
         }
 
@@ -147,6 +318,10 @@ namespace Lab6
                     else if (message.Contains("DRAW:"))
                     {
                         ProcessDrawMessage(message);
+                    }
+                    else if (message.StartsWith("IMAGE:"))
+                    {
+                        ProcessImageMessage(message);
                     }
                 }
             }
@@ -412,6 +587,57 @@ namespace Lab6
             catch { }
 
             listenThread?.Join(); // chờ thread kết thúc an toàn
+        }
+        private void InsertImageFromFile(string filePath)
+        {
+            try
+            {
+                using (var img = Image.FromFile(filePath))
+                {
+                    insertedImage = new Bitmap(img);
+                }
+                // gửi ảnh đến server: IMAGE:x,y,width,height,base64
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    insertedImage.Save(ms, ImageFormat.Png);
+                    string base64 = Convert.ToBase64String(ms.ToArray());
+                    string message = $"IMAGE:{insertedImageRect.X},{insertedImageRect.Y},{insertedImageRect.Width},{insertedImageRect.Height},{base64}";
+                    SendMessage(message);
+                }
+
+                panel1.Invalidate();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không mở được ảnh: " + ex.Message);
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Title = "Chọn ảnh để chèn vào whiteboard";
+            openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                InsertImageFromFile(openFileDialog.FileName);
+            }
+        }
+        private DragMode GetResizeHandle(Point location)
+        {
+            Rectangle tl = new Rectangle(insertedImageRect.Left - handleSize / 2, insertedImageRect.Top - handleSize / 2, handleSize, handleSize);
+            Rectangle tr = new Rectangle(insertedImageRect.Right - handleSize / 2, insertedImageRect.Top - handleSize / 2, handleSize, handleSize);
+            Rectangle bl = new Rectangle(insertedImageRect.Left - handleSize / 2, insertedImageRect.Bottom - handleSize / 2, handleSize, handleSize);
+            Rectangle br = new Rectangle(insertedImageRect.Right - handleSize / 2, insertedImageRect.Bottom - handleSize / 2, handleSize, handleSize);
+
+            if (tl.Contains(location)) return DragMode.ResizeTopLeft;
+            if (tr.Contains(location)) return DragMode.ResizeTopRight;
+            if (bl.Contains(location)) return DragMode.ResizeBottomLeft;
+            if (br.Contains(location)) return DragMode.ResizeBottomRight;
+            if (insertedImageRect.Contains(location)) return DragMode.Move;
+
+            return DragMode.None;
         }
     }
 }
