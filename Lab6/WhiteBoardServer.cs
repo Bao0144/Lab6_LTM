@@ -179,6 +179,7 @@ namespace Lab6
                 while (isRunning && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
                     ProcessMessage(message);
                     Broadcast(buffer, bytesRead); // Gửi tới client khác
                 }
@@ -305,17 +306,17 @@ namespace Lab6
 
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioButton2.Checked) penSize = 4;
+            if (radioButton2.Checked) penSize = 6;
         }
 
         private void radioButton3_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioButton3.Checked) penSize = 6;
+            if (radioButton3.Checked) penSize = 10;
         }
 
         private void radioButton4_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioButton4.Checked) penSize = 8;
+            if (radioButton4.Checked) penSize = 15;
         }
 
         private void radioButton5_CheckedChanged(object sender, EventArgs e)
