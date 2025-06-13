@@ -48,6 +48,13 @@ namespace Lab6
             public DateTime Timestamp { get; set; }
         }
 
+        private class ImageCommand
+        {
+            public Rectangle Rect { get; set; }
+            public string Base64 { get; set; }
+        }
+
+        private List<ImageCommand> imageHistory = new List<ImageCommand>(); // ⬅ để lưu lịch sử ảnh
         private List<DrawCommand> drawHistory = new List<DrawCommand>();
         private readonly object historyLock = new object();
 
@@ -279,12 +286,57 @@ namespace Lab6
             }
         }
 
+        private void ProcessImageMessage(string message)
+        {
+            try
+            {
+                string data = message.Substring("IMAGE:".Length);
+                string[] parts = data.Split(new[] { ',' }, 5);
+
+                if (parts.Length == 5)
+                {
+                    int x = int.Parse(parts[0]);
+                    int y = int.Parse(parts[1]);
+                    int w = int.Parse(parts[2]);
+                    int h = int.Parse(parts[3]);
+                    string base64 = parts[4];
+
+                    byte[] imgData = Convert.FromBase64String(base64);
+                    using (MemoryStream ms = new MemoryStream(imgData))
+                    using (Image img = Image.FromStream(ms))
+                    {
+                        lock (canvasLock)
+                        {
+                            g.DrawImage(img, new Rectangle(x, y, w, h));
+                        }
+
+                        panel1.Invoke(new Action(() => panel1.Invalidate()));
+                    }
+
+                    // ✅ Lưu vào lịch sử ảnh
+                    lock (historyLock)
+                    {
+                        imageHistory.Add(new ImageCommand
+                        {
+                            Rect = new Rectangle(x, y, w, h),
+                            Base64 = base64
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ProcessImageMessage error: " + ex.Message);
+                Console.WriteLine("❌ ProcessImageMessage ERROR: " + ex.Message);
+                Console.WriteLine("❌ Message base64 phần đầu: " + message.Substring(0, Math.Min(100, message.Length)));
+            }
+        }
         private void HandleClientComm(object? clientObj)
         {
             TcpClient client = (TcpClient)clientObj!;
             NetworkStream stream = client.GetStream();
 
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[65*1024];
             int bytesRead;
 
             try
@@ -293,14 +345,19 @@ namespace Lab6
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                    // Chỉ xử lý message từ client nếu là DRAW command
                     if (message.StartsWith("DRAW:"))
                     {
                         ProcessDrawMessage(message);
-                        // Broadcast tới các client khác (không gửi lại cho client gửi)
+                        BroadcastToOthers(buffer, bytesRead, client);
+                    }
+                    else if (message.StartsWith("IMAGE:"))
+                    {
+                        // Forward ảnh tới các client khác
+                        ProcessImageMessage(message);
                         BroadcastToOthers(buffer, bytesRead, client);
                     }
                 }
+
             }
             catch
             {
@@ -391,6 +448,15 @@ namespace Lab6
                     NetworkStream stream = client.GetStream();
 
                     // Gửi số lượng commands trước
+                    foreach (var img in imageHistory)
+                    {
+                        string msg = $"IMAGE:{img.Rect.X},{img.Rect.Y},{img.Rect.Width},{img.Rect.Height},{img.Base64}";
+                        byte[] imgData = Encoding.UTF8.GetBytes(msg);
+                        stream.Write(imgData, 0, imgData.Length);
+                        stream.Flush();
+                        Thread.Sleep(10); // Delay nhỏ để tránh client bị ngợp
+                    }
+
                     string countMessage = $"HISTORY_COUNT:{drawHistory.Count}";
                     byte[] countData = Encoding.UTF8.GetBytes(countMessage);
                     stream.Write(countData, 0, countData.Length);

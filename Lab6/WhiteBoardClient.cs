@@ -6,6 +6,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Text;
 using System.Drawing.Drawing2D;
+using System.Diagnostics;
 
 namespace Lab6
 {
@@ -215,7 +216,7 @@ namespace Lab6
 
                     panel1.Invalidate();
 
-                    string message = $"{lastPoint.X},{lastPoint.Y},{e.Location.X},{e.Location.Y},{currentColor.R},{currentColor.G},{currentColor.B},{penSize}";
+                    string message = $"DRAW:{lastPoint.X},{lastPoint.Y},{e.Location.X},{e.Location.Y},{currentColor.R},{currentColor.G},{currentColor.B},{penSize}";
                     SendMessage(message);
 
                     lastPoint = e.Location;
@@ -283,13 +284,13 @@ namespace Lab6
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ProcessImageMessage error: " + ex.Message);
+                Debug.WriteLine("ProcessImageMessage error: " + ex.Message);
             }
         }
 
         private void ListenForServer()
         {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[64*1024];
             int bytesRead;
 
             try
@@ -327,7 +328,7 @@ namespace Lab6
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Disconnected from server: " + ex.Message);
+               Debug.WriteLine("Disconnected from server: " + ex.Message);
             }
             finally
             {
@@ -602,6 +603,11 @@ namespace Lab6
                     insertedImage.Save(ms, ImageFormat.Png);
                     string base64 = Convert.ToBase64String(ms.ToArray());
                     string message = $"IMAGE:{insertedImageRect.X},{insertedImageRect.Y},{insertedImageRect.Width},{insertedImageRect.Height},{base64}";
+                    // DEBUG:
+                    Debug.WriteLine("CLIENT gửi ảnh:");
+                    Debug.WriteLine("Base64 length: " + base64.Length);
+                    Debug.WriteLine(message.Substring(0, 100) + "..."); // in 100 ký tự đầu
+
                     SendMessage(message);
                 }
 
